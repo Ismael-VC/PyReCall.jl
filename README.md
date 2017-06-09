@@ -1,8 +1,8 @@
 # Calling Python functions from the Julia language
 
-[![Build Status](https://travis-ci.org/JuliaPy/PyReCall.jl.svg?branch=master)](https://travis-ci.org/JuliaPy/PyReCall.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/ycvukpk4ujq987pm?svg=true)](https://ci.appveyor.com/project/StevenGJohnson/PyReCall-jl-nu3aa)
-[![Coverage Status](https://coveralls.io/repos/JuliaPy/PyReCall.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaPy/PyReCall.jl?branch=master)
+[![Build Status](https://travis-ci.org/Ismael-VC/PyReCall.jl.svg?branch=master)](https://travis-ci.org/Ismael-VC/PyReCall.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/0dag5fdudo4gkhoy?svg=true)](https://ci.appveyor.com/project/Ismael-VC/pyrecall-jl)
+[![Coverage Status](https://coveralls.io/repos/github/Ismael-VC/PyReCall.jl/badge.svg?branch=master)](https://coveralls.io/github/Ismael-VC/PyReCall.jl?branch=master)
 
 <!--
 [![PyReCall](http://pkg.julialang.org/badges/PyReCall_0.3.svg)](http://pkg.julialang.org/?pkg=PyReCall&ver=0.3)
