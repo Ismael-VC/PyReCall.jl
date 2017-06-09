@@ -15,14 +15,14 @@ try # make sure deps.jl file is removed on error
 #########################################################################
 
 # Fix the environment for running `python`, and setts IO encoding to UTF-8.
-# If cmd is the Conda python, then additionally removes all PYTHON* and
+# If cmd is the Conda python, then additionally removes all REPYTHON* and
 # CONDA* environment variables.
 function pythonenv(cmd::Cmd)
     env = copy(ENV)
     if dirname(cmd.exec[1]) == abspath(Conda.PYTHONDIR)
         pythonvars = String[]
         for var in keys(env)
-            if startswith(var, "CONDA") || startswith(var, "PYTHON")
+            if startswith(var, "CONDA") || startswith(var, "REPYTHON")
                 push!(pythonvars, var)
             end
         end
@@ -129,7 +129,7 @@ function find_libpython(python::AbstractString)
     end
 
     error("""
-        Couldn't find libpython; check your PYTHON environment variable.
+        Couldn't find libpython; check your REPYTHON environment variable.
 
         The python executable we tried was $python (= version $v);
         the library names we tried were $libs
@@ -143,7 +143,7 @@ include("depsutils.jl")
 #########################################################################
 
 const python = try
-    let py = get(ENV, "PYTHON", isfile("PYTHON") ? readchomp("PYTHON") :
+    let py = get(ENV, "REPYTHON", isfile("REPYTHON") ? readchomp("REPYTHON") :
                  is_linux() || Sys.ARCH ∉ (:i686, :x86_64) ? "python" : ""),
         vers = isempty(py) ? v"0.0" : convert(VersionNumber, pyconfigvar(py,"VERSION","0.0"))
         if vers < v"2.7"
@@ -167,7 +167,7 @@ catch e1
     if Sys.ARCH in (:i686, :x86_64)
         if isa(e1, UseCondaPython)
             info("Using the Python distribution in the Conda package by default.\n",
-                 "To use a different Python version, set ENV[\"PYTHON\"]=\"pythoncommand\" and re-run Pkg.build(\"PyReCall\").")
+                 "To use a different Python version, set ENV[\"REPYTHON\"]=\"pythoncommand\" and re-run Pkg.build(\"PyReCall\").")
         else
             info( "No system-wide Python was found; got the following error:\n",
                   "$e1\nusing the Python distribution in the Conda package")
@@ -246,7 +246,7 @@ writeifchanged("deps.jl", """
     """)
 
 # Make subsequent builds (e.g. Pkg.update) use the same Python by default:
-writeifchanged("PYTHON", isfile(programname) ? programname : python)
+writeifchanged("REPYTHON", isfile(programname) ? programname : python)
 
 #########################################################################
 

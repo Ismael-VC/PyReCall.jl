@@ -47,16 +47,16 @@ your own packages, use the `pyimport_conda` function described below.)
 
 ### Specifying the Python version
 
-If you want to use a different version of Python than the default, you can change the Python version by setting the `PYTHON` environment variable to the path of the `python` executable and then re-running `Pkg.build("PyReCall")`.  In Julia:
+If you want to use a different version of Python than the default, you can change the Python version by setting the `REPYTHON` environment variable to the path of the `python` executable and then re-running `Pkg.build("PyReCall")`.  In Julia:
 
-    ENV["PYTHON"] = "... path of the python program you want ..."
+    ENV["REPYTHON"] = "... path of the python program you want ..."
     Pkg.build("PyReCall")
 
 Note also that you will need to re-run `Pkg.build("PyReCall")` if your
 `python` program changes significantly (e.g. you switch to a new
 Python distro, or you switch from Python 2 to Python 3).
 
-To force Julia to use its own Python distribution, via Conda, simply set `ENV["PYTHON"]` to the empty string `""` and re-run `Pkg.build("PyReCall")`.
+To force Julia to use its own Python distribution, via Conda, simply set `ENV["REPYTHON"]` to the empty string `""` and re-run `Pkg.build("PyReCall")`.
 
 The current Python version being used is stored in the `pyversion`
 global variable of the `PyReCall` module.  You can also look at
@@ -69,15 +69,15 @@ directly to the `libpython` library.  But it finds the location of `libpython` b
 
 Subsequent builds of PyReCall (e.g. when you update the package via
 `Pkg.update`) will use the same Python executable name by default,
-unless you set the `PYTHON` environment variable or delete the file
-`Pkg.dir("PyReCall","deps","PYTHON")`.
+unless you set the `REPYTHON` environment variable or delete the file
+`Pkg.dir("PyReCall","deps","REPYTHON")`.
 
 **Note:** If you use Python
 [virtualenvs](http://docs.python-guide.org/en/latest/dev/virtualenvs/),
 then be aware that PyReCall *uses the virtualenv it was built with*, even
 if you switch virtualenvs.  If you want to switch PyReCall to use a
 different virtualenv, then you should switch virtualenvs and run
-`rm(Pkg.dir("PyReCall","deps","PYTHON")); Pkg.build("PyReCall")`.
+`rm(Pkg.dir("PyReCall","deps","REPYTHON")); Pkg.build("PyReCall")`.
 
 **Note:** Usually, the necessary libraries are
 installed along with Python, but [pyenv on

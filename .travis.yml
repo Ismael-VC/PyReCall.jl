@@ -9,15 +9,15 @@ env:
   global:
     - PyReCall_DEBUG_BUILD="yes"
   matrix:
-    - PYTHON=python  # python 2.7
-    - PYTHON=python3 # python 3.5
-    - PYTHON=Conda-python # not actually a python version, here to test Conda.jl's python
+    - REPYTHON=python  # python 2.7
+    - REPYTHON=python3 # python 3.5
+    - REPYTHON=Conda-python # not actually a python version, here to test Conda.jl's python
 matrix:
   exclude:
     - os: osx
-      env: PYTHON=python3 # I'm not sure how to install Python 3 on Travis OSX
+      env: REPYTHON=python3 # I'm not sure how to install Python 3 on Travis OSX
 before_install:
-    - test "x$TRAVIS_OS_NAME" = xosx -o "x$PYTHON" = xConda-python || (sudo apt-get -qq update && sudo apt-get install -y $PYTHON)
+    - test "x$TRAVIS_OS_NAME" = xosx -o "x$REPYTHON" = xConda-python || (sudo apt-get -qq update && sudo apt-get install -y $REPYTHON)
 after_success:
     - julia -e 'cd(Pkg.dir("PyReCall")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
 notifications:

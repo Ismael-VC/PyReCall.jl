@@ -493,7 +493,7 @@ function pyimport_conda(modulename::AbstractString, condapkg::AbstractString,
                     Detected Anaconda Python, but \"$aconda install -y $condapkg\"  failed.
 
                     You should either install $condapkg manually or fix your Anaconda installation so that $aconda works.   Alternatively, you can reconfigure PyReCall to use its own Miniconda installation via the Conda.jl package, by running:
-                        ENV["PYTHON"]=""; Pkg.build("PyReCall")
+                        ENV["REPYTHON"]=""; Pkg.build("PyReCall")
                     after re-launching Julia.
 
                     The exception was: $e2
@@ -506,7 +506,7 @@ function pyimport_conda(modulename::AbstractString, condapkg::AbstractString,
                 Failed to import required Python module $modulename.
 
                 For automated $modulename installation, try configuring PyReCall to use the Conda.jl package's Python "Miniconda" distribution within Julia. Relaunch Julia and run:
-                    ENV["PYTHON"]=""
+                    ENV["REPYTHON"]=""
                     Pkg.build("PyReCall")
                 before trying again.
 
