@@ -337,7 +337,7 @@ end
 
 # destructor for jlwrap instance, assuming it was created with pyjlwrap_new
 function pyjlwrap_dealloc(o::PyPtr)
-    delete!(pycall_gc, o)
+    delete!(PyReCall_gc, o)
     return nothing
 end
 
@@ -345,8 +345,8 @@ unsafe_pyjlwrap_to_objref(o::PyPtr) =
   unsafe_pointer_to_objref(unsafe_load(convert(Ptr{Ptr{Void}}, o), 3))
 
 pyjlwrap_repr(o::PyPtr) =
-    pystealref!(PyObject(o != C_NULL ? string("<PyCall.jlwrap ",unsafe_pyjlwrap_to_objref(o),">")
-                                     : "<PyCall.jlwrap NULL>"))
+    pystealref!(PyObject(o != C_NULL ? string("<PyReCall.jlwrap ",unsafe_pyjlwrap_to_objref(o),">")
+                                     : "<PyReCall.jlwrap NULL>"))
 
 function pyjlwrap_hash(o::PyPtr)
     h = hash(unsafe_pyjlwrap_to_objref(o))
@@ -355,7 +355,7 @@ function pyjlwrap_hash(o::PyPtr)
 end
 
 # 32-bit hash on 64-bit machines, needed for Python < 3.2 with Windows
-const pysalt32 = 0xb592cd9b # hash("PyCall") % UInt32
+const pysalt32 = 0xb592cd9b # hash("PyReCall") % UInt32
 function pyjlwrap_hash32(o::PyPtr)
     h = ccall(:int64to32hash, UInt32, (UInt64,),
               hash(unsafe_pyjlwrap_to_objref(o)))
@@ -394,7 +394,7 @@ function pyjlwrap_init()
         Py_TPFLAGS_HAVE_STACKLESS_EXTENSION[] = Py_TPFLAGS_HAVE_STACKLESS_EXTENSION_
     end
 
-    PyTypeObject!(jlWrapType, "PyCall.jlwrap", sizeof(Py_jlWrap),
+    PyTypeObject!(jlWrapType, "PyReCall.jlwrap", sizeof(Py_jlWrap),
                   t::PyTypeObject -> begin
                      t.tp_flags |= Py_TPFLAGS_BASETYPE
                      t.tp_members = pointer(pyjlwrap_members);
@@ -404,7 +404,7 @@ function pyjlwrap_init()
                      pyjlwrap_hash32_ptr : pyjlwrap_hash_ptr
                   end)
 
-    pyjlwrap_type!(jl_FunctionType, "PyCall.jl_Function",
+    pyjlwrap_type!(jl_FunctionType, "PyReCall.jl_Function",
                    t -> begin
                             t.tp_call = jl_Function_call_ptr
                             t.tp_getattro = jl_Function_getattr_ptr
@@ -433,7 +433,7 @@ pyjlwrap_type(name::AbstractString, init::Function) =
 function pyjlwrap_new(pyT::PyTypeObject, value::Any)
     o = PyObject(@pycheckn ccall((@pysym :_PyObject_New),
                                  PyPtr, (Ptr{PyTypeObject},), &pyT))
-    pycall_gc[o.o] = value
+    PyReCall_gc[o.o] = value
     p = convert(Ptr{Ptr{Void}}, o.o)
     unsafe_store!(p, ccall(:jl_value_ptr, Ptr{Void}, (Any,), value), 3)
     return o

@@ -1,4 +1,4 @@
-# Conversions between Julia and Python types for the PyCall module.
+# Conversions between Julia and Python types for the PyReCall module.
 
 #########################################################################
 # Conversions of simple types (numbers and nothing)
@@ -26,7 +26,7 @@ PyObject(n::Void) = pyerr_check("PyObject(nothing)", pyincref(pynothing[]))
 
 # Numpy scalars need to be converted to ordinary Python scalars with
 # the item() method before passing to the Python API conversion functions
-asscalar(o::PyObject) = pyisinstance(o, npy_number) ? pycall(o["item"], PyObject) : o
+asscalar(o::PyObject) = pyisinstance(o, npy_number) ? PyReCall(o["item"], PyObject) : o
 
 convert{T<:Integer}(::Type{T}, po::PyObject) =
   convert(T, @pycheck ccall(@pysym(PyInt_AsSsize_t), Int, (PyPtr,), asscalar(po)))
@@ -109,7 +109,7 @@ end
 #########################################################################
 # Pointer conversions, using ctypes or PyCapsule
 
-PyObject(p::Ptr) = pycall(c_void_p_Type, PyObject, UInt(p))
+PyObject(p::Ptr) = PyReCall(c_void_p_Type, PyObject, UInt(p))
 
 function convert(::Type{Ptr{Void}}, po::PyObject)
     if pyisinstance(po, c_void_p_Type)
@@ -154,7 +154,7 @@ convert(::Type{PyAny}, x) = x
 
 convert(::Type{Function}, po::PyObject) =
     function fn(args...; kwargs...)
-        pycall(po, PyAny, args...; kwargs...)
+        PyReCall(po, PyAny, args...; kwargs...)
     end
 
 #########################################################################
@@ -197,7 +197,7 @@ end
 
 This returns a PyVector object, which is a wrapper around an arbitrary Python list or sequence object.
 
-Alternatively, `PyVector` can be used as the return type for a `pycall` that returns a sequence object (including tuples).
+Alternatively, `PyVector` can be used as the return type for a `PyReCall` that returns a sequence object (including tuples).
 """
 type PyVector{T} <: AbstractVector{T}
     o::PyObject
@@ -398,7 +398,7 @@ end
 
 This returns a PyDict, which is a no-copy wrapper around a Python dictionary.
 
-Alternatively, you can specify the return type of a `pycall` as PyDict.
+Alternatively, you can specify the return type of a `PyReCall` as PyDict.
 """
 type PyDict{K,V,isdict} <: Associative{K,V}
     o::PyObject
@@ -430,8 +430,8 @@ haskey{K,V}(d::PyDict{K,V,true}, key) = 1 == ccall(@pysym(:PyDict_Contains), Cin
 keys{T,K,V}(::Type{T}, d::PyDict{K,V,true}) = convert(Vector{T}, PyObject(@pycheckn ccall((@pysym :PyDict_Keys), PyPtr, (PyPtr,), d)))
 values{T,K,V}(::Type{T}, d::PyDict{K,V,true}) = convert(Vector{T}, PyObject(@pycheckn ccall((@pysym :PyDict_Values), PyPtr, (PyPtr,), d)))
 
-keys{T,K,V}(::Type{T}, d::PyDict{K,V,false}) = convert(Vector{T}, pycall(d.o["keys"], PyObject))
-values{T,K,V}(::Type{T}, d::PyDict{K,V,false}) = convert(Vector{T}, pycall(d.o["values"], PyObject))
+keys{T,K,V}(::Type{T}, d::PyDict{K,V,false}) = convert(Vector{T}, PyReCall(d.o["keys"], PyObject))
+values{T,K,V}(::Type{T}, d::PyDict{K,V,false}) = convert(Vector{T}, PyReCall(d.o["values"], PyObject))
 haskey{K,V}(d::PyDict{K,V,false}, key) = 1 == ccall(@pysym(:PyMapping_HasKey), Cint, (PyPtr, PyPtr), d, PyObject(key))
 
 similar{K,V}(d::PyDict{K,V}) = Dict{pyany_toany(K),pyany_toany(V)}()
@@ -522,7 +522,7 @@ function next{K,V}(d::PyDict{K,V,true}, itr::PyDict_Iterator)
 # To strictly use the Julia iteration protocol, we should pass
 # d.o["items"] rather than d.o to done and next, but the PyObject
 # iterator functions only look at the state s, so we are okay.
-start{K,V}(d::PyDict{K,V,false}) = start(pycall(d.o["items"], PyObject))
+start{K,V}(d::PyDict{K,V,false}) = start(PyReCall(d.o["items"], PyObject))
 done{K,V}(d::PyDict{K,V,false}, s) = done(d.o, s)
 function next{K,V}(d::PyDict{K,V,false}, s)
     nxt = PyObject(@pycheck ccall((@pysym :PyIter_Next), PyPtr, (PyPtr,), s[2]))
@@ -566,7 +566,7 @@ end
 # Range: integer ranges are converted to xrange,
 #         while other ranges (<: AbstractVector) are converted to lists
 
-xrange(start, stop, step) = pycall(pyxrange[], PyObject,
+xrange(start, stop, step) = PyReCall(pyxrange[], PyObject,
                                    start, stop, step)
 
 function PyObject{T<:Integer}(r::Range{T})
@@ -602,7 +602,7 @@ end
 
 # load mpmath module & initialize.  Currently, this is done
 # the first time a BigFloat is converted to Python.  Alternatively,
-# we could do it when PyCall is initialized (if mpmath is available),
+# we could do it when PyReCall is initialized (if mpmath is available),
 # at the cost of slowing down initialization in the common case where
 # BigFloat conversion is not needed.
 const mpprec = [0]
@@ -629,12 +629,12 @@ end
 
 function PyObject(x::BigFloat)
     mpmath_init()
-    pycall(mpf, PyObject, string(x))
+    PyReCall(mpf, PyObject, string(x))
 end
 
 function PyObject(x::Complex{BigFloat})
     mpmath_init()
-    pycall(mpc, PyObject, string(real(x)), string(imag(x)))
+    PyReCall(mpc, PyObject, string(real(x)), string(imag(x)))
 end
 
 function convert(::Type{BigFloat}, o::PyObject)
@@ -752,7 +752,7 @@ const pytype_queries = Array{Tuple{PyObject,Type}}(0)
 """
     pytype_mapping(pytype, jltype)
 
-Given a Python type object `pytype`, tell PyCall to convert it to
+Given a Python type object `pytype`, tell PyReCall to convert it to
 `jltype` in `PyAny(object)` conversions.
 """
 function pytype_mapping(py::PyObject, jl::Type)

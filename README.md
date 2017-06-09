@@ -1,12 +1,12 @@
 # Calling Python functions from the Julia language
 
-[![Build Status](https://travis-ci.org/JuliaPy/PyCall.jl.svg?branch=master)](https://travis-ci.org/JuliaPy/PyCall.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/ycvukpk4ujq987pm?svg=true)](https://ci.appveyor.com/project/StevenGJohnson/pycall-jl-nu3aa)
-[![Coverage Status](https://coveralls.io/repos/JuliaPy/PyCall.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaPy/PyCall.jl?branch=master)
+[![Build Status](https://travis-ci.org/JuliaPy/PyReCall.jl.svg?branch=master)](https://travis-ci.org/JuliaPy/PyReCall.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/ycvukpk4ujq987pm?svg=true)](https://ci.appveyor.com/project/StevenGJohnson/PyReCall-jl-nu3aa)
+[![Coverage Status](https://coveralls.io/repos/JuliaPy/PyReCall.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaPy/PyReCall.jl?branch=master)
 
-[![PyCall](http://pkg.julialang.org/badges/PyCall_0.3.svg)](http://pkg.julialang.org/?pkg=PyCall&ver=0.3)
-[![PyCall](http://pkg.julialang.org/badges/PyCall_0.4.svg)](http://pkg.julialang.org/?pkg=PyCall&ver=0.4)
-[![PyCall](http://pkg.julialang.org/badges/PyCall_0.5.svg)](http://pkg.julialang.org/?pkg=PyCall&ver=0.5)
+[![PyReCall](http://pkg.julialang.org/badges/PyReCall_0.3.svg)](http://pkg.julialang.org/?pkg=PyReCall&ver=0.3)
+[![PyReCall](http://pkg.julialang.org/badges/PyReCall_0.4.svg)](http://pkg.julialang.org/?pkg=PyReCall&ver=0.4)
+[![PyReCall](http://pkg.julialang.org/badges/PyReCall_0.5.svg)](http://pkg.julialang.org/?pkg=PyReCall&ver=0.5)
 
 This package provides the ability to directly call and **fully
 interoperate with Python** from [the Julia
@@ -18,26 +18,26 @@ without copying them.
 
 ## Installation
 
-Within Julia, just use the package manager to run `Pkg.add("PyCall")` to
+Within Julia, just use the package manager to run `Pkg.add("PyReCall")` to
 install the files.  Julia 0.5 or later is required.
 
-The latest development version of PyCall is available from
-<https://github.com/stevengj/PyCall.jl>.  If you want to switch to
-this after installing the package, run `Pkg.checkout("PyCall"); Pkg.build("PyCall")`.
+The latest development version of PyReCall is available from
+<https://github.com/stevengj/PyReCall.jl>.  If you want to switch to
+this after installing the package, run `Pkg.checkout("PyReCall"); Pkg.build("PyReCall")`.
 
-By default on Mac and Windows systems, `Pkg.add("PyCall")`
-or `Pkg.build("PyCall")` will use the
+By default on Mac and Windows systems, `Pkg.add("PyReCall")`
+or `Pkg.build("PyReCall")` will use the
 [Conda.jl](https://github.com/Luthaf/Conda.jl) package to install a
 minimal Python distribution (via
 [Miniconda](http://conda.pydata.org/docs/install/quick.html)) that is
 private to Julia (not in your `PATH`).  You can use the `Conda` Julia
 package to install more Python packages, and `import Conda` to print
 the `Conda.PYTHONDIR` directory where `python` was installed.
-On GNU/Linux systems, PyCall will default to using
+On GNU/Linux systems, PyReCall will default to using
 the `python` program (if any) in your PATH.
 
 The advantage of a Conda-based configuration is particularly
-compelling if you are installing PyCall in order to use packages like
+compelling if you are installing PyReCall in order to use packages like
 [PyPlot.jl](https://github.com/stevengj/PyPlot.jl) or
 [SymPy.jl](https://github.com/jverzani/SymPy.jl), as these can then
 automatically install their Python dependencies.  (To exploit this in
@@ -45,44 +45,44 @@ your own packages, use the `pyimport_conda` function described below.)
 
 ### Specifying the Python version
 
-If you want to use a different version of Python than the default, you can change the Python version by setting the `PYTHON` environment variable to the path of the `python` executable and then re-running `Pkg.build("PyCall")`.  In Julia:
+If you want to use a different version of Python than the default, you can change the Python version by setting the `PYTHON` environment variable to the path of the `python` executable and then re-running `Pkg.build("PyReCall")`.  In Julia:
 
     ENV["PYTHON"] = "... path of the python program you want ..."
-    Pkg.build("PyCall")
+    Pkg.build("PyReCall")
 
-Note also that you will need to re-run `Pkg.build("PyCall")` if your
+Note also that you will need to re-run `Pkg.build("PyReCall")` if your
 `python` program changes significantly (e.g. you switch to a new
 Python distro, or you switch from Python 2 to Python 3).
 
-To force Julia to use its own Python distribution, via Conda, simply set `ENV["PYTHON"]` to the empty string `""` and re-run `Pkg.build("PyCall")`.
+To force Julia to use its own Python distribution, via Conda, simply set `ENV["PYTHON"]` to the empty string `""` and re-run `Pkg.build("PyReCall")`.
 
 The current Python version being used is stored in the `pyversion`
-global variable of the `PyCall` module.  You can also look at
-`PyCall.libpython` to find the name of the Python library or
-`PyCall.pyprogramname` for the `python` program name.  If it is
-using the Conda Python, `PyCall.conda` will be `true`.
+global variable of the `PyReCall` module.  You can also look at
+`PyReCall.libpython` to find the name of the Python library or
+`PyReCall.pyprogramname` for the `python` program name.  If it is
+using the Conda Python, `PyReCall.conda` will be `true`.
 
-(Technically, PyCall does not use the `python` program per se: it links
+(Technically, PyReCall does not use the `python` program per se: it links
 directly to the `libpython` library.  But it finds the location of `libpython` by running `python` during `Pkg.build`.)
 
-Subsequent builds of PyCall (e.g. when you update the package via
+Subsequent builds of PyReCall (e.g. when you update the package via
 `Pkg.update`) will use the same Python executable name by default,
 unless you set the `PYTHON` environment variable or delete the file
-`Pkg.dir("PyCall","deps","PYTHON")`.
+`Pkg.dir("PyReCall","deps","PYTHON")`.
 
 **Note:** If you use Python
 [virtualenvs](http://docs.python-guide.org/en/latest/dev/virtualenvs/),
-then be aware that PyCall *uses the virtualenv it was built with*, even
-if you switch virtualenvs.  If you want to switch PyCall to use a
+then be aware that PyReCall *uses the virtualenv it was built with*, even
+if you switch virtualenvs.  If you want to switch PyReCall to use a
 different virtualenv, then you should switch virtualenvs and run
-`rm(Pkg.dir("PyCall","deps","PYTHON")); Pkg.build("PyCall")`.
+`rm(Pkg.dir("PyReCall","deps","PYTHON")); Pkg.build("PyReCall")`.
 
 **Note:** Usually, the necessary libraries are
 installed along with Python, but [pyenv on
-MacOS](https://github.com/stevengj/PyCall.jl/issues/122) requires you
+MacOS](https://github.com/stevengj/PyReCall.jl/issues/122) requires you
 to install it with `env PYTHON_CONFIGURE_OPTS="--enable-framework"
 pyenv install 3.4.3`.  The Enthought Canopy Python distribution is
-currently [not supported](https://github.com/stevengj/PyCall.jl/issues/42).
+currently [not supported](https://github.com/stevengj/PyReCall.jl/issues/42).
 As a general rule, we tend to recommend the [Anaconda Python
 distribution](https://store.continuum.io/cshop/anaconda/) on MacOS and
 Windows, or using the Julia Conda package, in order to minimize headaches.
@@ -92,7 +92,7 @@ Windows, or using the Julia Conda package, in order to minimize headaches.
 Here is a simple example to call Python's `math.sin` function and
 compare it to the built-in Julia `sin`:
 
-    using PyCall
+    using PyReCall
     @pyimport math
     math.sin(math.pi / 4) - sin(pi / 4)  # returns 0.0
 
@@ -159,7 +159,7 @@ Here are solutions to some common problems:
 * As mentioned above, use `foo[:bar]` and `foo[:bar](...)` rather than `foo.bar` and `foo.bar(...)`,
 respectively, to access attributes and methods of Python objects.
 
-* By default, PyCall [doesn't include the current directory in the Python search path](https://github.com/stevengj/PyCall.jl/issues/48).   If you want to do that (in order to load a Python module from the current directory), just run `unshift!(PyVector(pyimport("sys")["path"]), "")`.
+* By default, PyReCall [doesn't include the current directory in the Python search path](https://github.com/stevengj/PyReCall.jl/issues/48).   If you want to do that (in order to load a Python module from the current directory), just run `unshift!(PyVector(pyimport("sys")["path"]), "")`.
 
 ## Python object interfaces
 
@@ -174,11 +174,11 @@ described later).
 
 #### PyObject
 
-The PyCall module also provides a new type `PyObject` (a wrapper around
+The PyReCall module also provides a new type `PyObject` (a wrapper around
 `PyObject*` in Python's C API) representing a reference to a Python object.
 
 Constructors `PyObject(o)` are provided for a number of Julia types,
-and PyCall also supplies `convert(T, o::PyObject)` to convert
+and PyReCall also supplies `convert(T, o::PyObject)` to convert
 PyObjects back into Julia types `T`.  Currently, the types supported
 are numbers (integer, real, and complex), booleans, strings, IO streams,
 dates/periods, and functions, along with tuples and arrays/lists
@@ -203,7 +203,7 @@ is equivalent to `o[i-1]` in Python.
 
 You can call an `o::PyObject` via `o(args...)` just like in Python
 (assuming that the object is callable in Python).  The explicit
-`pycall` form is still useful in Julia if you want to specify the
+`PyReCall` form is still useful in Julia if you want to specify the
 return type.
 
 #### Arrays and PyArray
@@ -223,26 +223,26 @@ However, the *default* ordering of NumPy arrays created in *Python* is row-major
 Multidimensional NumPy arrays (`ndarray`) are supported and can be
 converted to the native Julia `Array` type, which makes a copy of the data.
 
-Alternatively, the PyCall module also provides a new type `PyArray` (a
+Alternatively, the PyReCall module also provides a new type `PyArray` (a
 subclass of `AbstractArray`) which implements a no-copy wrapper around
 a NumPy array (currently of numeric types or objects only).  Just use
-`PyArray` as the return type of a `pycall` returning an `ndarray`, or
+`PyArray` as the return type of a `PyReCall` returning an `ndarray`, or
 call `PyArray(o::PyObject)` on an `ndarray` object `o`.  (Technically,
 a `PyArray` works for any Python object that uses the NumPy array
-interface to provide a data pointer and shape information.)  
+interface to provide a data pointer and shape information.)
 
 Conversely, when passing arrays *to* Python, Julia `Array` types are
 converted to `PyObject` types *without* making a copy via NumPy,
-e.g. when passed as `pycall` arguments.
+e.g. when passed as `PyReCall` arguments.
 
 #### PyVector
 
-The PyCall module provides a new type `PyVector` (a subclass of
+The PyReCall module provides a new type `PyVector` (a subclass of
 `AbstractVector`) which implements a no-copy wrapper around an
 arbitrary Python list or sequence object.  (Unlike `PyArray`, the
 `PyVector` type is not limited to `NumPy` arrays, although using
 `PyArray` for the latter is generally more efficient.)  Just use
-`PyArray` as the return type of a `pycall` returning a list or
+`PyArray` as the return type of a `PyReCall` returning a list or
 sequence object (including tuples), or call `PyVector(o::PyObject)` on
 a sequence object `o`.
 
@@ -252,10 +252,10 @@ an ordinary Julia `Vector`.
 
 #### PyDict
 
-Similar to `PyVector`, PyCall also provides a type `PyDict` (a subclass
+Similar to `PyVector`, PyReCall also provides a type `PyDict` (a subclass
 of `Association`) that implements a no-copy wrapper around a Python
 dictionary (or any object implementing the mapping protocol).  Just
-use `PyDict` as the return type of a `pycall` returning a dictionary,
+use `PyDict` as the return type of a `PyReCall` returning a dictionary,
 or call `PyDict(o::PyObject)` on a dictionary object `o`.  By
 default, a `PyDict` is an `Any => Any` dictionary (or actually `PyAny
 => PyAny`) that performs runtime type inference, but if your Python
@@ -286,9 +286,9 @@ from how the file was opened.)
 
 #### PyAny
 
-The `PyAny` type is used in conversions to tell PyCall to detect the
+The `PyAny` type is used in conversions to tell PyReCall to detect the
 Python type at runtime and convert to the corresponding native Julia
-type.  That is, `pycall(func, PyAny, ...)` and `convert(PyAny,
+type.  That is, `PyReCall(func, PyAny, ...)` and `convert(PyAny,
 o::PyObject)` both automatically convert their result to a native
 Julia type (if possible).   This is convenient, but will lead
 to slightly worse performance (due to the overhead of runtime type-checking
@@ -301,12 +301,12 @@ appropriate type conversions to Julia types based on runtime
 inspection of the Python objects.  However greater control over these
 type conversions (e.g. to use a no-copy `PyArray` for a Python
 multidimensional array rather than copying to an `Array`) can be
-achieved by using the lower-level functions below.  Using `pycall` in
+achieved by using the lower-level functions below.  Using `PyReCall` in
 cases where the Python return type is known can also improve
 performance, both by eliminating the overhead of runtime type inference
 and also by providing more type information to the Julia compiler.
 
-* `pycall(function::PyObject, returntype::Type, args...)`.   Call the given
+* `PyReCall(function::PyObject, returntype::Type, args...)`.   Call the given
   Python `function` (typically looked up from a module) with the given
   `args...` (of standard Julia types which are converted automatically to
   the corresponding Python types if possible), converting the return value
@@ -400,7 +400,7 @@ The method arguments and return values are automatically converted between Julia
 
 Here's another example using [Tkinter](https://wiki.python.org/moin/TkInter):
 
-    using PyCall
+    using PyReCall
     @pyimport Tkinter as tk
 
     @pydef type SampleApp <: tk.Tk
@@ -420,7 +420,7 @@ For Python packages that have a graphical user interface (GUI),
 notably plotting packages like matplotlib (or MayaVi or Chaco), it is
 convenient to start the GUI event loop (which processes things like
 mouse clicks) as an asynchronous task within Julia, so that the GUI is
-responsive without blocking Julia's input prompt.  PyCall includes
+responsive without blocking Julia's input prompt.  PyReCall includes
 functions to implement these event loops for some of the most common
 cross-platform [GUI
 toolkits](http://en.wikipedia.org/wiki/Widget_toolkit):
@@ -468,7 +468,7 @@ do so using `ccall`.
 * Use `@pysym(func::Symbol)` to get a function pointer to pass to `ccall`
   given a symbol `func` in the Python API.  e.g. you can call `int Py_IsInitialized()` by `ccall(@pysym(:Py_IsInitialized), Int32, ())`.
 
-* PyCall defines the typealias `PyPtr` for `PythonObject*` argument types,
+* PyReCall defines the typealias `PyPtr` for `PythonObject*` argument types,
   and `PythonObject` (see above) arguments are correctly converted to this
   type.  `PythonObject(p::PyPtr)` creates a Julia wrapper around a
   `PyPtr` return value.
@@ -504,9 +504,9 @@ do so using `ccall`.
   given a Python type object `t`.  `pytypeof(o::PyObject)` returns the
   Python type of `o`, equivalent to `type(o)` in Python.
 
-### Using PyCall from Julia Modules
+### Using PyReCall from Julia Modules
 
-You can use PyCall from any Julia code, including within Julia modules. However, some care is required when using PyCall from [precompiled Julia modules](http://docs.julialang.org/en/latest/manual/modules/#module-initialization-and-precompilation). The key thing to remember is that *all Python objects* (any `PyObject`) contain *pointers* to memory allocated by the Python runtime, and such pointers *cannot be saved* in precompiled constants.   (When a precompiled library is reloaded, these pointers will not contain valid memory addresses.)
+You can use PyReCall from any Julia code, including within Julia modules. However, some care is required when using PyReCall from [precompiled Julia modules](http://docs.julialang.org/en/latest/manual/modules/#module-initialization-and-precompilation). The key thing to remember is that *all Python objects* (any `PyObject`) contain *pointers* to memory allocated by the Python runtime, and such pointers *cannot be saved* in precompiled constants.   (When a precompiled library is reloaded, these pointers will not contain valid memory addresses.)
 
 The solution is fairly simple:
 
@@ -519,7 +519,7 @@ For example, suppose your module uses the `scipy.optimize` module, and you want 
 ```jl
 __precompile__() # this module is safe to precompile
 module MyModule
-using PyCall
+using PyReCall
 
 const scipy_opt = PyNULL()
 
@@ -532,8 +532,8 @@ end
 Then you can access the `scipy.optimize` functions as `scipy_opt[:newton]`
 and so on.
 
-Here, instead of `pyimport`, we have used the function `pyimport_conda`.   The second argument is the name of the [Anaconda package](https://docs.continuum.io/anaconda/pkg-docs) that provides this module.   This way, if importing `scipy.optimize` fails because the user hasn't installed `scipy`, it will either (a) automatically install `scipy` and retry the `pyimport` if PyCall is configured to use the [Conda](https://github.com/Luthaf/Conda.jl) Python install (or
-any other Anaconda-based Python distro for which the user has installation privileges), or (b) throw an error explaining that `scipy` needs to be installed, and explain how to configure PyCall to use Conda so that it can be installed automatically.   More generally, you can call `pyimport(module, package, channel)` to specify an optional Anaconda "channel" for installing non-standard Anaconda packages.
+Here, instead of `pyimport`, we have used the function `pyimport_conda`.   The second argument is the name of the [Anaconda package](https://docs.continuum.io/anaconda/pkg-docs) that provides this module.   This way, if importing `scipy.optimize` fails because the user hasn't installed `scipy`, it will either (a) automatically install `scipy` and retry the `pyimport` if PyReCall is configured to use the [Conda](https://github.com/Luthaf/Conda.jl) Python install (or
+any other Anaconda-based Python distro for which the user has installation privileges), or (b) throw an error explaining that `scipy` needs to be installed, and explain how to configure PyReCall to use Conda so that it can be installed automatically.   More generally, you can call `pyimport(module, package, channel)` to specify an optional Anaconda "channel" for installing non-standard Anaconda packages.
 
 (Note that you cannot use `@pyimport` safely with precompilation, because that declares a global constant that internally has a pointer to the module.  You can use `pywrap(pyimport(...))` in your `__init__` function to a assign a global variable using the `.` notation like `@pyimport`, however, albeit without the type stability of the global `const` as above.)
 

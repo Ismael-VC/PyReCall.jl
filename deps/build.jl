@@ -1,9 +1,9 @@
 # In this file, we figure out how to link to Python (surprisingly complicated)
 # and generate a deps/deps.jl file with the libpython name and other information
-# needed for static compilation of PyCall.
+# needed for static compilation of PyReCall.
 
 # As a result, if you switch to a different version or path of Python, you
-# will probably need to re-run Pkg.build("PyCall").
+# will probably need to re-run Pkg.build("PyReCall").
 
 using Compat
 import Conda
@@ -107,7 +107,7 @@ function find_libpython(python::AbstractString)
         end
     end
 
-    if "yes" == get(ENV, "PYCALL_DEBUG_BUILD", "no") # print out extra info to help with remote debugging
+    if "yes" == get(ENV, "PyReCall_DEBUG_BUILD", "no") # print out extra info to help with remote debugging
         println(STDERR, "------------------------------------- exceptions -----------------------------------------")
         for s in error_strings
             print(s, "\n\n")
@@ -167,7 +167,7 @@ catch e1
     if Sys.ARCH in (:i686, :x86_64)
         if isa(e1, UseCondaPython)
             info("Using the Python distribution in the Conda package by default.\n",
-                 "To use a different Python version, set ENV[\"PYTHON\"]=\"pythoncommand\" and re-run Pkg.build(\"PyCall\").")
+                 "To use a different Python version, set ENV[\"PYTHON\"]=\"pythoncommand\" and re-run Pkg.build(\"PyReCall\").")
         else
             info( "No system-wide Python was found; got the following error:\n",
                   "$e1\nusing the Python distribution in the Conda package")
@@ -206,10 +206,10 @@ end
 # cache the Python version as a Julia VersionNumber
 const pyversion = VersionNumber(pyvar(python, "platform", "python_version()"))
 
-info("PyCall is using $python (Python $pyversion) at $programname, libpython = $libpy_name")
+info("PyReCall is using $python (Python $pyversion) at $programname, libpython = $libpy_name")
 
 if pyversion < v"2.7"
-    error("Python 2.7 or later is required for PyCall")
+    error("Python 2.7 or later is required for PyReCall")
 end
 
 # A couple of key strings need to be stored as constants so that
@@ -252,7 +252,7 @@ writeifchanged("PYTHON", isfile(programname) ? programname : python)
 
 catch
 
-# remove deps.jl (if it exists) on an error, so that PyCall will
+# remove deps.jl (if it exists) on an error, so that PyReCall will
 # not load until it is properly configured.
 isfile("deps.jl") && rm("deps.jl")
 rethrow()

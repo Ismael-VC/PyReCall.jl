@@ -1,8 +1,8 @@
 __precompile__()
 
-module PyCall
+module PyReCall
 
-export pycall, pyimport, pybuiltin, PyObject, PyReverseDims,
+export PyReCall, pyimport, pybuiltin, PyObject, PyReverseDims,
        PyPtr, pyincref, pydecref, pyversion, PyArray, PyArray_Info,
        pyerr_check, pyerr_clear, pytype_query, PyAny, @pyimport, PyDict,
        pyisinstance, pywrap, pytypeof, pyeval, PyVector, pystring,
@@ -19,7 +19,7 @@ import Base: size, ndims, similar, copy, getindex, setindex!, stride,
 # Python C API is not interrupt-save.  In principle, we should
 # use sigatomic for every ccall to the Python library, but this
 # should really be fixed in Julia (#2622).  However, we will
-# use the sigatomic_begin/end functions to protect pycall and
+# use the sigatomic_begin/end functions to protect PyReCall and
 # similar long-running (or potentially long-running) code.
 import Base: sigatomic_begin, sigatomic_end
 
@@ -138,7 +138,7 @@ pyisinstance(o::PyObject, t::Union{Ptr{Void},PyPtr}) =
 pyquery(q::Ptr{Void}, o::PyObject) =
   ccall(q, Cint, (PyPtr,), o) == 1
 
-pytypeof(o::PyObject) = o.o == C_NULL ? throw(ArgumentError("NULL PyObjects have no Python type")) : pycall(TypeType, PyObject, o)
+pytypeof(o::PyObject) = o.o == C_NULL ? throw(ArgumentError("NULL PyObjects have no Python type")) : PyReCall(TypeType, PyObject, o)
 
 # conversion to pass PyObject as ccall arguments:
 unsafe_convert(::Type{PyPtr}, po::PyObject) = po.o
@@ -205,7 +205,7 @@ end
 #########################################################################
 # computing hashes of PyObjects
 
-const pysalt = hash("PyCall.PyObject") # "salt" to mix in to PyObject hashes
+const pysalt = hash("PyReCall.PyObject") # "salt" to mix in to PyObject hashes
 hashsalt(x) = hash(x, pysalt)
 
 function hash(o::PyObject)
@@ -290,7 +290,7 @@ end
 
 #########################################################################
 
-keys(o::PyObject) = Symbol[m[1] for m in pycall(inspect["getmembers"],
+keys(o::PyObject) = Symbol[m[1] for m in PyReCall(inspect["getmembers"],
                                 PyVector{Tuple{Symbol,PyObject}}, o)]
 
 #########################################################################
@@ -311,7 +311,7 @@ If the Python module contains identifiers that are reserved words in Julia (e.g.
 """
 function pywrap(o::PyObject, mname::Symbol=:__anon__)
     members = convert(Vector{Tuple{AbstractString,PyObject}},
-                      pycall(inspect["getmembers"], PyObject, o))
+                      PyReCall(inspect["getmembers"], PyObject, o))
     filter!(m -> !(m[1] in reserved), members)
     m = Module(mname, false)
     consts = [Expr(:const, Expr(:(=), Symbol(x[1]), convert(PyAny, x[2]))) for x in members]
@@ -440,7 +440,7 @@ end
 """
     anaconda_conda()
 
-Return the path of the `conda` program if PyCall is configured to use
+Return the path of the `conda` program if PyReCall is configured to use
 an Anaconda install (but *not* the Conda.jl Python), and the empty
 string otherwise.
 """
@@ -457,15 +457,15 @@ end
     pyimport_conda(modulename, condapkg, [channel])
 
 Returns the result of `pyimport(modulename)` if possible.   If the module
-is not found, and PyCall is configured to use the Conda Python distro
+is not found, and PyReCall is configured to use the Conda Python distro
 (via the Julia Conda package), then automatically install `condapkg`
 via `Conda.add(condapkg)` and then re-try the `pyimport`.   Other
 Anaconda-based Python installations are also supported as long as
 their `conda` program is functioning.
 
-If PyCall is not using Conda and the `pyimport` fails, throws
+If PyReCall is not using Conda and the `pyimport` fails, throws
 an exception with an error message telling the user how to configure
-PyCall to use Conda for automated installation of the module.
+PyReCall to use Conda for automated installation of the module.
 
 The third argument, `channel` is an optional Anaconda "channel" to use
 for installing the package; this is useful for packages that are not
@@ -492,8 +492,8 @@ function pyimport_conda(modulename::AbstractString, condapkg::AbstractString,
                     error("""
                     Detected Anaconda Python, but \"$aconda install -y $condapkg\"  failed.
 
-                    You should either install $condapkg manually or fix your Anaconda installation so that $aconda works.   Alternatively, you can reconfigure PyCall to use its own Miniconda installation via the Conda.jl package, by running:
-                        ENV["PYTHON"]=""; Pkg.build("PyCall")
+                    You should either install $condapkg manually or fix your Anaconda installation so that $aconda works.   Alternatively, you can reconfigure PyReCall to use its own Miniconda installation via the Conda.jl package, by running:
+                        ENV["PYTHON"]=""; Pkg.build("PyReCall")
                     after re-launching Julia.
 
                     The exception was: $e2
@@ -505,9 +505,9 @@ function pyimport_conda(modulename::AbstractString, condapkg::AbstractString,
             error("""
                 Failed to import required Python module $modulename.
 
-                For automated $modulename installation, try configuring PyCall to use the Conda.jl package's Python "Miniconda" distribution within Julia. Relaunch Julia and run:
+                For automated $modulename installation, try configuring PyReCall to use the Conda.jl package's Python "Miniconda" distribution within Julia. Relaunch Julia and run:
                     ENV["PYTHON"]=""
-                    Pkg.build("PyCall")
+                    Pkg.build("PyReCall")
                 before trying again.
 
                 The pyimport exception was: $e
@@ -531,9 +531,9 @@ end
 #########################################################################
 
 """
-Low-level version of `pycall(o, ...)` that always returns `PyObject`.
+Low-level version of `PyReCall(o, ...)` that always returns `PyObject`.
 """
-function _pycall(o::Union{PyObject,PyPtr}, args...; kwargs...)
+function _PyReCall(o::Union{PyObject,PyPtr}, args...; kwargs...)
     oargs = map(PyObject, args)
     nargs = length(args)
     sigatomic_begin()
@@ -561,17 +561,17 @@ function _pycall(o::Union{PyObject,PyPtr}, args...; kwargs...)
 end
 
 """
-    pycall(o::Union{PyObject,PyPtr}, returntype::TypeTuple, args...; kwargs...)
+    PyReCall(o::Union{PyObject,PyPtr}, returntype::TypeTuple, args...; kwargs...)
 
 Call the given Python function (typically looked up from a module) with the given args... (of standard Julia types which are converted automatically to the corresponding Python types if possible), converting the return value to returntype (use a returntype of PyObject to return the unconverted Python object reference, or of PyAny to request an automated conversion)
 """
-pycall(o::Union{PyObject,PyPtr}, returntype::TypeTuple, args...; kwargs...) =
-    return convert(returntype, _pycall(o, args...; kwargs...))::returntype
+PyReCall(o::Union{PyObject,PyPtr}, returntype::TypeTuple, args...; kwargs...) =
+    return convert(returntype, _PyReCall(o, args...; kwargs...))::returntype
 
-pycall(o::Union{PyObject,PyPtr}, ::Type{PyAny}, args...; kwargs...) =
-    return convert(PyAny, _pycall(o, args...; kwargs...))
+PyReCall(o::Union{PyObject,PyPtr}, ::Type{PyAny}, args...; kwargs...) =
+    return convert(PyAny, _PyReCall(o, args...; kwargs...))
 
-(o::PyObject)(args...; kws...) = pycall(o, PyAny, args...; kws...)
+(o::PyObject)(args...; kws...) = PyReCall(o, PyAny, args...; kws...)
 (::Type{PyAny})(o::PyObject) = convert(PyAny, o)
 
 
@@ -735,7 +735,7 @@ for (mime, method) in ((MIME"text/html", "_repr_html_"),
     @eval begin
         function show(io::IO, mime::$mime, o::PyObject)
             if o.o != C_NULL && haskey(o, $method)
-                r = pycall(o[$method], PyObject)
+                r = PyReCall(o[$method], PyObject)
                 r.o != pynothing[] && return write(io, convert($T, r))
             end
             throw(MethodError($(VERSION < v"0.5.0-dev+4340") ? writemime : show,
@@ -744,7 +744,7 @@ for (mime, method) in ((MIME"text/html", "_repr_html_"),
         mimewritable(::$mime, o::PyObject) =
             o.o != C_NULL && haskey(o, $method) && let meth = o[$method]
                 meth.o != pynothing[] &&
-                pycall(meth, PyObject).o != pynothing[]
+                PyReCall(meth, PyObject).o != pynothing[]
             end
     end
 end
@@ -775,4 +775,4 @@ precompile(pyjlwrap_hash32, (PyPtr,))
 
 # TODO: precompilation of the io.jl functions
 
-end # module PyCall
+end # module PyReCall

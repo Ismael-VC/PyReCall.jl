@@ -1,4 +1,4 @@
-using Base.Test, PyCall, Compat
+using Base.Test, PyReCall, Compat
 
 if isdefined(Base, :Iterators)
     filter(f, itr) = collect(Iterators.filter(f, itr))
@@ -8,7 +8,7 @@ end
 PYTHONPATH=get(ENV,"PYTHONPATH","")
 PYTHONHOME=get(ENV,"PYTHONHOME","")
 PYTHONEXECUTABLE=get(ENV,"PYTHONEXECUTABLE","")
-info("Python version $pyversion from $(PyCall.libpython), PYTHONHOME=$(PyCall.PYTHONHOME)\nENV[PYTHONPATH]=$PYTHONPATH\nENV[PYTHONHOME]=$PYTHONHOME\nENV[PYTHONEXECUTABLE]=$PYTHONEXECUTABLE")
+info("Python version $pyversion from $(PyReCall.libpython), PYTHONHOME=$(PyReCall.PYTHONHOME)\nENV[PYTHONPATH]=$PYTHONPATH\nENV[PYTHONHOME]=$PYTHONHOME\nENV[PYTHONEXECUTABLE]=$PYTHONEXECUTABLE")
 
 roundtrip(T, x) = convert(T, PyObject(x))
 roundtrip(x) = roundtrip(PyAny, x)
@@ -17,7 +17,7 @@ roundtripeq(x) = roundtrip(x) == x
 
 
 # test handling of type-tuple changes in Julia 0.4
-import PyCall.pyany_toany
+import PyReCall.pyany_toany
 @test pyany_toany(Int) == Int
 @test pyany_toany(PyAny) == Any
 @test pyany_toany(Tuple{Int,PyAny}) == Tuple{Int,Any}
@@ -45,21 +45,21 @@ import PyCall.pyany_toany
 @test roundtrip(3 => 4) == (3,4)
 @test roundtrip(Pair{Int,Int}, 3 => 4) == Pair(3,4)
 
-@test pycall(PyObject(x -> x + 1), PyAny, 314158) == 314159
+@test PyReCall(PyObject(x -> x + 1), PyAny, 314158) == 314159
 @test PyObject(x -> x + 1)(314158) == 314159
 @test PyAny(PyObject(3)) == 3
 @test roundtrip(x -> x + 1)(314158) == 314159
 
 testkw(x; y=0) = x + 2*y
-@test pycall(PyObject(testkw), PyAny, 314157) == 314157
-@test pycall(PyObject(testkw), PyAny, 314157, y=1) == 314159
+@test PyReCall(PyObject(testkw), PyAny, 314157) == 314157
+@test PyReCall(PyObject(testkw), PyAny, 314157, y=1) == 314159
 @test roundtrip(testkw)(314157) == 314157
 @test roundtrip(testkw)(314157, y=1) == 314159
 
-# check type stability of pycall with an explicit return type
-@inferred pycall(PyObject(1)[:__add__], Int, 2)
+# check type stability of PyReCall with an explicit return type
+@inferred PyReCall(PyObject(1)[:__add__], Int, 2)
 
-if PyCall.npy_initialized
+if PyReCall.npy_initialized
     @test PyArray(PyObject([1. 2 3;4 5 6])) == [1. 2 3;4 5 6]
     let A = rand(Int, 2,3,4), B = rand(Bool, 2,3,4)
         @test convert(PyAny, PyReverseDims(A)) == permutedims(A, [3,2,1])
@@ -86,12 +86,12 @@ end
 @test roundtripeq(Any[1 2 3; 4 5 6])
 @test roundtripeq([])
 @test convert(Array{PyAny,1}, PyObject(Any[1 2 3; 4 5 6])) == Any[Any[1,2,3],Any[4,5,6]]
-if PyCall.npy_initialized
+if PyReCall.npy_initialized
     @test roundtripeq(begin A = Array{Int}(); A[1] = 3; A; end)
 end
 @test convert(PyAny, PyObject(begin A = Array{Any}(); A[1] = 3; A; end)) == 3
 
-array2py2arrayeq(x) = PyCall.py2array(Float64,PyCall.array2py(x)) == x
+array2py2arrayeq(x) = PyReCall.py2array(Float64,PyReCall.array2py(x)) == x
 @test array2py2arrayeq(rand(3))
 @test array2py2arrayeq(rand(3,4))
 @test array2py2arrayeq(rand(3,4,5))
@@ -125,7 +125,7 @@ let x = PyVector(PyAny[])
     @test x == ["bar"]
 end
 
-if pyversion >= v"2.7" && isdefined(PyCall, :PyDateTime_CAPI)
+if pyversion >= v"2.7" && isdefined(PyReCall, :PyDateTime_CAPI)
     @test roundtripeq(Dates.Date(2012,3,4))
     @test roundtripeq(Dates.DateTime(2012,3,4, 7,8,9,11))
     @test roundtripeq(Dates.Millisecond(typemax(Int32)))
@@ -141,7 +141,7 @@ end
 
 # in Python 3, we need a specific encoding to write strings or bufferize them
 # (http://stackoverflow.com/questions/5471158/typeerror-str-does-not-support-the-buffer-interface)
-pyutf8(s::PyObject) = pycall(s["encode"], PyObject, "utf-8")
+pyutf8(s::PyObject) = PyReCall(s["encode"], PyObject, "utf-8")
 pyutf8(s::String) = pyutf8(PyObject(s))
 
 # IO (issue #107)
@@ -226,11 +226,11 @@ end
 @test convert(BigInt, PyObject(1234)) == 1234
 
 # buffers
-let b = PyCall.PyBuffer(pyutf8("test string"))
+let b = PyReCall.PyBuffer(pyutf8("test string"))
     @test ndims(b) == 1
     @test (length(b),) == (length("test string"),) == (size(b, 1),) == size(b)
     @test stride(b, 1) == 1
-    @test PyCall.iscontiguous(b) == true
+    @test PyReCall.iscontiguous(b) == true
 end
 
 let o = PyObject(1+2im)
@@ -250,7 +250,7 @@ let a1=[5,8,6], a2=rand(3,4), a3=rand(3,4,5), o1=PyObject(a1), o2=PyObject(a2), 
 
     # multiple indices are passed as tuples, but this is apparently
     # only supported by numpy arrays.
-    if PyCall.npy_initialized
+    if PyReCall.npy_initialized
         @test [o2[i,j] for i=1:3, j=1:4] == a2
         @test [o3[i,j,k] for i=1:3, j=1:4, k=1:5] == a3
         @test o3[2,3] == collect(a3[2,3,:])
@@ -287,7 +287,7 @@ end
 
 @test pyimport_conda("inspect", "not a conda package").o != C_NULL
 import Conda
-if PyCall.conda
+if PyReCall.conda
     # import pyzmq to test PR #294
     let already_installed = "pyzmq" ∈ Conda._installed_packages()
         @test pyimport_conda("zmq", "pyzmq").o != C_NULL
@@ -319,7 +319,7 @@ let x = "1+1"
 end
 
 # Float16 support:
-if PyCall.npy_initialized
+if PyReCall.npy_initialized
     @test roundtripeq(Float16[17 18 Inf -Inf -0.0 0.0])
     @test isa(roundtrip(Float16[17]), Vector{Float16})
 end

@@ -51,8 +51,8 @@ function __init__()
                                Ptr{UInt8}, ())))[1])
 
     if new_pyversion.major != pyversion.major
-        error("PyCall precompiled with Python $pyversion, but now using Python $new_pyversion; ",
-              "you need to relaunch Julia and re-run Pkg.build(\"PyCall\")")
+        error("PyReCall precompiled with Python $pyversion, but now using Python $new_pyversion; ",
+              "you need to relaunch Julia and re-run Pkg.build(\"PyReCall\")")
     end
 
     copy!(inspect, pyimport("inspect"))

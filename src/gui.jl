@@ -90,8 +90,8 @@ function gtk_eventloop(gtkmodule::AbstractString, sec::Real=50e-3)
     main_iteration = gtk["main_iteration"]
     install_doevent(sec) do async
         # handle all pending
-        while pycall(events_pending, Bool)
-            pycall(main_iteration, PyObject)
+        while PyReCall(events_pending, Bool)
+            PyReCall(main_iteration, PyObject)
         end
     end
 end
@@ -143,10 +143,10 @@ function qt_eventloop(QtCore::PyObject, sec::Real=50e-3)
     pop!(ENV, "QT_PLUGIN_PATH", "") # clean up environment
     maxtime = PyObject(50)
     install_doevent(sec) do async
-        app = pycall(instance, PyObject)
+        app = PyReCall(instance, PyObject)
         if app.o != pynothing[]
             app["_in_event_loop"] = true
-            pycall(processEvents, PyObject, AllEvents, maxtime)
+            PyReCall(processEvents, PyObject, AllEvents, maxtime)
         end
     end
 end
@@ -170,18 +170,18 @@ function wx_eventloop(sec::Real=50e-3)
     EventLoop = wx["EventLoop"]
     EventLoopActivator = wx["EventLoopActivator"]
     install_doevent(sec) do async
-        app = pycall(GetApp, PyObject)
+        app = PyReCall(GetApp, PyObject)
         if app.o != pynothing[]
             app["_in_event_loop"] = true
-            evtloop = pycall(EventLoop, PyObject)
-            ea = pycall(EventLoopActivator, PyObject, evtloop)
+            evtloop = PyReCall(EventLoop, PyObject)
+            ea = PyReCall(EventLoopActivator, PyObject, evtloop)
             Pending = evtloop["Pending"]
             Dispatch = evtloop["Dispatch"]
-            while pycall(Pending, Bool)
-                pycall(Dispatch, PyObject)
+            while PyReCall(Pending, Bool)
+                PyReCall(Dispatch, PyObject)
             end
             pydecref(ea) # deactivate event loop
-            pycall(app["ProcessIdle"], PyObject)
+            PyReCall(app["ProcessIdle"], PyObject)
         end
     end
 end
@@ -192,7 +192,7 @@ function Tk_eventloop(sec::Real=50e-3)
     install_doevent(sec) do async
         root = Tk["_default_root"]
         if root.o != pynothing[]
-            pycall(root["update"], PyObject)
+            PyReCall(root["update"], PyObject)
         end
     end
 end

@@ -36,7 +36,7 @@ function show(io::IO, e::PyError)
     end
 
     if e.traceback.o != C_NULL
-        o = pycall(format_traceback, PyObject, e.traceback)
+        o = PyReCall(format_traceback, PyObject, e.traceback)
         if o.o != C_NULL
             for s in PyVector{AbstractString}(o)
                 print(io, s)

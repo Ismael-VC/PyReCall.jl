@@ -1,4 +1,4 @@
-# Julia wrappers around the NumPy API, as part of the PyCall package
+# Julia wrappers around the NumPy API, as part of the PyReCall package
 
 #########################################################################
 # Initialization (UGLY)
@@ -62,7 +62,7 @@ function npyinitialize()
     numpy = pyimport("numpy")
 
     # directory for numpy include files to parse
-    inc = pycall(numpy["get_include"], AbstractString)
+    inc = PyReCall(numpy["get_include"], AbstractString)
 
     # numpy.number types
     copy!(npy_number, numpy["number"])
@@ -299,7 +299,7 @@ This converts an `ndarray` object `o` to a PyArray.
 
 This implements a nocopy wrapper to a NumPy array (currently of only numeric types only).
 
-If you are using `pycall` and the function returns an `ndarray`, you can use `PyArray` as the return type to directly receive a `PyArray`.
+If you are using `PyReCall` and the function returns an `ndarray`, you can use `PyArray` as the return type to directly receive a `PyArray`.
 """
 type PyArray{T,N} <: AbstractArray{T,N}
     o::PyObject

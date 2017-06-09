@@ -13,7 +13,7 @@ end
 # internal function evaluate a python string, returning PyObject, given
 # Python dictionaries of global and local variables to use in the expression,
 # and a current "file name" to use for stack traces
-function pyeval_(s::AbstractString, globals=maindict(), locals=maindict(), input_type=Py_eval_input, fname="PyCall")
+function pyeval_(s::AbstractString, globals=maindict(), locals=maindict(), input_type=Py_eval_input, fname="PyReCall")
     sb = String(s) # use temp var to prevent gc before we are done with o
     sigatomic_begin()
     try

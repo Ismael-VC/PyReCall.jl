@@ -81,8 +81,8 @@ function jl_Function_getattr(self_::PyPtr, attr__::PyPtr)
     return PyPtr_NULL
 end
 
-function pycallback(f::Function)
+function PyReCallback(f::Function)
     pyjlwrap_new(jl_FunctionType, f)
 end
 
-PyObject(f::Function) = pycallback(f)
+PyObject(f::Function) = PyReCallback(f)
