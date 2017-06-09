@@ -4,9 +4,11 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/ycvukpk4ujq987pm?svg=true)](https://ci.appveyor.com/project/StevenGJohnson/PyReCall-jl-nu3aa)
 [![Coverage Status](https://coveralls.io/repos/JuliaPy/PyReCall.jl/badge.svg?branch=master)](https://coveralls.io/r/JuliaPy/PyReCall.jl?branch=master)
 
+<!--
 [![PyReCall](http://pkg.julialang.org/badges/PyReCall_0.3.svg)](http://pkg.julialang.org/?pkg=PyReCall&ver=0.3)
 [![PyReCall](http://pkg.julialang.org/badges/PyReCall_0.4.svg)](http://pkg.julialang.org/?pkg=PyReCall&ver=0.4)
 [![PyReCall](http://pkg.julialang.org/badges/PyReCall_0.5.svg)](http://pkg.julialang.org/?pkg=PyReCall&ver=0.5)
+-->
 
 This package provides the ability to directly call and **fully
 interoperate with Python** from [the Julia
